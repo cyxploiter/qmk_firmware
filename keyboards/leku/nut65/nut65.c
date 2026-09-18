@@ -4,6 +4,9 @@
 #include QMK_KEYBOARD_H
 #include "wls/wls.h"
 #include "rgb_record/rgb_record.h"
+#ifdef SIGNALRGB_SUPPORT_ENABLE
+#    include "signalrgb/signalrgb.h"
+#endif
 #include "rgb_record/rgb_rgblight.h"
 
 #ifdef WIRELESS_ENABLE
@@ -1715,6 +1718,16 @@ void housekeeping_task_user(void) { // loop
 #define DELAY_TIME 50
 void lightUpRainbowWindow(int startIndex);
 bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
+#ifdef SIGNALRGB_SUPPORT_ENABLE
+    /* In SignalRGB mode the host owns every LED. Everything below this point
+       writes the framebuffer each frame -- battery/caps/wireless indicators,
+       blink tasks, and hs_rgblight_increase() repainting the whole lightbar --
+       so it would overwrite the streamed colors. Caps Lock is still shown, from
+       inside led_streaming(). */
+    if (signalrgb_is_active()) {
+        return false;
+    }
+#endif
     if (!start_paoma_flag) {
         extern LED_TYPE rgb_matrix_ws2812_array[RGB_MATRIX_LED_COUNT];
 

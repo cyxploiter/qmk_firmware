@@ -16,3 +16,19 @@ bool RGBR_PLAY(effect_params_t *params) {
 
 #    endif // RGB_MATRIX_CUSTOM_EFFECT_IMPLS
 #endif
+
+#ifdef SIGNALRGB_SUPPORT_ENABLE
+RGB_MATRIX_EFFECT(SIGNALRGB)
+#    ifdef RGB_MATRIX_CUSTOM_EFFECT_IMPLS
+
+/* Deliberately writes nothing: the framebuffer is filled straight from the
+   raw-HID stream in signalrgb.c, and this effect just keeps rgb_matrix from
+   painting over it. */
+bool SIGNALRGB(effect_params_t *params) {
+    RGB_MATRIX_USE_LIMITS(led_min, led_max);
+
+    return rgb_matrix_check_finished_leds(led_max);
+}
+
+#    endif // RGB_MATRIX_CUSTOM_EFFECT_IMPLS
+#endif

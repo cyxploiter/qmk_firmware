@@ -390,9 +390,20 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
 }
 
 bool via_command_kb(uint8_t *data, uint8_t length) {
-    
+
     hs_rgb_blink_set_timer(timer_read32());
-    
+
+#ifdef SIGNALRGB_SUPPORT_ENABLE
+    /* SignalRGB uses raw HID command IDs 0x21-0x28, which VIA does not claim.
+       via.c calls this hook before its own dispatch, so handling them here and
+       returning true keeps both tools working against the same interface.
+       Returning true also suppresses VIA's trailing raw_hid_send(), so each
+       handler sends its own reply. */
+    if (srgb_raw_hid_rx(data, length)) {
+        return true;
+    }
+#endif
+
     uint8_t *command_id = &(data[0]);
     if (*command_id == id_eeprom_reset) {
         hs_reset_settings();

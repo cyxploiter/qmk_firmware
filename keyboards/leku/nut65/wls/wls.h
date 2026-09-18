@@ -6,6 +6,9 @@
 #include "raw_hid.h"
 #include "via.h"
 #include "rgb_record/rgb_record.h"
+#ifdef SIGNALRGB_SUPPORT_ENABLE
+#    include "signalrgb/signalrgb.h"
+#endif
 
 #ifdef MM_BT_DEF_PIN
     #define HS_BT_DEF_PIN                     MM_BT_DEF_PIN
