@@ -326,6 +326,12 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
                     uint16_t size   = value_data[2]; // size <= 26
                     rgbrec_get_hs_buffer(offset, size, &value_data[3]);
                 } break;
+                case id_lightbar_mode: {
+                    value_data[0] = hs_get_lightbar_mode();
+                } break;
+                case id_lightbar_brightness: {
+                    value_data[0] = hs_get_lightbar_val();
+                } break;
                 default:{ 
                     *command_id = id_unhandled;
                 }break;
@@ -349,6 +355,14 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
                     uint16_t offset = (value_data[0] << 8) | value_data[1];
                     uint16_t size   = value_data[2]; 
                     rgbrec_set_hs_buffer(offset, size, &value_data[3]);
+                } break;
+                case id_lightbar_mode: {
+                    hs_set_lightbar_mode(value_data[0]);
+                    eeconfig_confinfo_update();
+                } break;
+                case id_lightbar_brightness: {
+                    hs_set_lightbar_val(value_data[0]);
+                    eeconfig_confinfo_update();
                 } break;
                 default:{ 
                     *command_id = id_unhandled;

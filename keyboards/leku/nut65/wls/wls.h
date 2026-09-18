@@ -52,11 +52,17 @@ enum via_custom_defined_id {
     id_rgbrec_channel,
     id_rgbrec_hs_data,
     id_rgbrec_hs_buffer,
+    id_lightbar_mode,       // 0x05
+    id_lightbar_brightness, // 0x06
 };
 
 extern bool lower_sleep;
 extern uint8_t hs_get_sleep_timeout(void);
 extern void hs_set_sleep_timeout(uint8_t time);
+extern uint8_t hs_get_lightbar_mode(void);
+extern void    hs_set_lightbar_mode(uint8_t mode);
+extern uint8_t hs_get_lightbar_val(void);
+extern void    hs_set_lightbar_val(uint8_t val);
 extern void eeconfig_confinfo_update(void);
 extern void hs_reset_settings(void);
 bool hs_rgb_blink_hook(void);

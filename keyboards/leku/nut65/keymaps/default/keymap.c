@@ -4,12 +4,14 @@
 #include QMK_KEYBOARD_H
 #include "rgb_record/rgb_record.h"
 
+extern bool alt_f4_ready;
+
 enum layers {
     _BL = 0,
     _FL,
     _MBL,
     _MFL,
-    _DEFA, 
+    _DEFA,
 };
 
 // clang-format off
@@ -100,3 +102,22 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 #endif
 
 // clang-format on
+
+#ifdef RGB_MATRIX_ENABLE
+bool rgb_matrix_indicators_user(void) {
+    // 1. FN Layers: Light up F1-F12 (Keys 1 to =)
+    if (layer_state_is(_FL) || layer_state_is(_MFL)) {
+        for (uint8_t i = 57; i <= 68; i++) {
+            rgb_matrix_set_color(i, 255, 255, 255); // White
+        }
+    }
+
+    // 2. Alt+F4 Safety: Light up '4' Red when ready
+    if (alt_f4_ready) {
+        // Index 60 is the '4' key on your specific board
+        rgb_matrix_set_color(60, 255, 0, 0); // Red
+    }
+
+    return false;
+}
+#endif
