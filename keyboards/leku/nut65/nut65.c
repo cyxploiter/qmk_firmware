@@ -102,6 +102,10 @@ uint8_t         rl_rgb_brightness_val  = 0;
 static uint32_t alt_timer    = 0;
 bool            alt_f4_ready = false;
 
+/* How long Caps Lock must be held before it becomes Fn, in ms. Well clear of a
+   normal keytap (~50-150ms) so ordinary Caps presses are unaffected. */
+#define CAPS_FN_HOLD_MS 500
+
 /* Caps Lock hold-to-Fn state */
 static bool     caps_held      = false;
 static bool     caps_fn_active = false;
@@ -1621,7 +1625,7 @@ void hs_matrix_loop(void) {
 void housekeeping_task_user(void) { // loop
 
     /* Caps Lock held past 1s engages the Fn layer until it is released. */
-    if (caps_held && !caps_fn_active && timer_elapsed32(caps_timer) >= 1000) {
+    if (caps_held && !caps_fn_active && timer_elapsed32(caps_timer) >= CAPS_FN_HOLD_MS) {
         caps_fn_active = true;
         layer_on(keymap_is_mac_system() ? _MFL : _FL);
     }
