@@ -1046,6 +1046,21 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
         } break;
+        case KC_SNIP: {
+            /* Screen snip: Win+Shift+S, or Cmd+Shift+4 in Mac mode.
+               register_code() writes the HID report directly, so this keeps
+               working with the GUI lock (GU_TOGG) enabled. A plain LSG(KC_S)
+               in the keymap would not: mod_config() strips the GUI bit when
+               keymap_config.no_gui is set, leaving a bare Shift+S. */
+            if (record->event.pressed) {
+                register_code(KC_LGUI);
+                register_code(KC_LSFT);
+                tap_code(keymap_is_mac_system() ? KC_4 : KC_S);
+                unregister_code(KC_LSFT);
+                unregister_code(KC_LGUI);
+            }
+            return false;
+        } break;
         case KC_CUT: {
             if (record->event.pressed) {
                 register_code16(KC_LCTL);

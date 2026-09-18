@@ -425,6 +425,71 @@
       "name": "Side light Subtract",
       "title": "Side light Subtract",
       "shortName": "RL_VAD"
+    },
+    {
+      "name": "RGB Rec",
+      "title": "RGB Record: start / stop recording",
+      "shortName": "REC"
+    },
+    {
+      "name": "RGB Rec 1",
+      "title": "RGB Record: select channel 1",
+      "shortName": "REC1"
+    },
+    {
+      "name": "RGB Rec 2",
+      "title": "RGB Record: select channel 2",
+      "shortName": "REC2"
+    },
+    {
+      "name": "RGB Rec 3",
+      "title": "RGB Record: select channel 3",
+      "shortName": "REC3"
+    },
+    {
+      "name": "Side Lt Tog",
+      "title": "Side light toggle (no firmware handler)",
+      "shortName": "RLTG"
+    },
+    {
+      "name": "Mute",
+      "title": "Mute",
+      "shortName": "MUTE"
+    },
+    {
+      "name": "Vol -",
+      "title": "Volume down",
+      "shortName": "VOL-"
+    },
+    {
+      "name": "Vol +",
+      "title": "Volume up",
+      "shortName": "VOL+"
+    },
+    {
+      "name": "App Switch",
+      "title": "App switcher (Alt+Tab)",
+      "shortName": "TAB"
+    },
+    {
+      "name": "Hide Win",
+      "title": "Hide window (Cmd+H)",
+      "shortName": "HIDE"
+    },
+    {
+      "name": "Show Desk",
+      "title": "Show desktop (Cmd+D)",
+      "shortName": "DESK"
+    },
+    {
+      "name": "Rate Test",
+      "title": "Polling rate test",
+      "shortName": "RATE"
+    },
+    {
+      "name": "Snip",
+      "title": "Screen snip (Win+Shift+S / Cmd+Shift+4)",
+      "shortName": "SNIP"
     }
   ],
   "layouts": {
