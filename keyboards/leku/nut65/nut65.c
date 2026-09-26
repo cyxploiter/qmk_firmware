@@ -102,11 +102,21 @@ uint8_t         rl_rgb_brightness_val  = 0;
 static uint32_t alt_timer    = 0;
 bool            alt_f4_ready = false;
 
+/* A key going down within this many ms of Caps is taken as typing rolled over
+   a Caps Lock tap, not as an Fn combo. Deliberately pressing Caps then a key
+   is slower than this; typing through a tap is faster. */
+#define CAPS_ROLLOVER_MS 100
+
+/* Matrix position of Caps Lock, used only for the stuck-layer safety net. */
+#define CAPS_MATRIX_ROW 2
+#define CAPS_MATRIX_COL 0
+
 /* Caps Lock hold-to-Fn state. caps_layer is latched at press time so release
    turns off the same layer even if the Mac/Windows mode changed in between. */
-static bool    caps_held  = false;
-static bool    caps_used  = false;
-static uint8_t caps_layer = 0;
+static bool     caps_held  = false;
+static bool     caps_used  = false;
+static uint8_t  caps_layer = 0;
+static uint32_t caps_down  = 0;
 // ------------------------
 
 static bool     linker_ok    = false;
@@ -786,6 +796,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 caps_held  = true;
                 caps_used  = false;
+                caps_down  = timer_read32();
                 caps_layer = keymap_is_mac_system() ? _MFL : _FL;
                 layer_on(caps_layer);
             } else {
@@ -798,9 +809,24 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
         }
 
-        /* Any other key going down while Caps is held means it was used as Fn,
-           so release must not also emit Caps Lock. */
         if (caps_held && record->event.pressed) {
+            /* Typing rolled over a Caps Lock tap: the user meant Caps Lock and
+               this key, not an Fn combo. Resolve Caps as a tap and re-send the
+               key from the base layer, since it already resolved through Fn. */
+            if (!caps_used && timer_elapsed32(caps_down) < CAPS_ROLLOVER_MS) {
+                layer_off(caps_layer);
+                caps_used = true; // release must not emit Caps Lock again
+                tap_code(KC_CAPS);
+
+                uint16_t base = keymap_key_to_keycode(keymap_is_mac_system() ? _MBL : _BL, record->event.key);
+                if (base != KC_NO && base != KC_TRANSPARENT) {
+                    tap_code16(base);
+                }
+                return false;
+            }
+
+            /* Otherwise it is a genuine Fn combo, so release must not also
+               emit Caps Lock. */
             caps_used = true;
         }
     }
@@ -1626,6 +1652,15 @@ void hs_matrix_loop(void) {
 }
 
 void housekeeping_task_user(void) { // loop
+
+    /* Safety net: if a Caps release was ever missed -- a wireless mode switch,
+       sleep, or the RGB recorder starting mid-press -- the Fn layer would stay
+       on and ordinary keys would keep firing Fn actions. Clear it once the key
+       reads physically up. */
+    if (caps_held && !matrix_is_on(CAPS_MATRIX_ROW, CAPS_MATRIX_COL)) {
+        caps_held = false;
+        layer_off(caps_layer);
+    }
 
     // Check if Alt is physically active in the keyboard's memory
     uint8_t mods = get_mods();
