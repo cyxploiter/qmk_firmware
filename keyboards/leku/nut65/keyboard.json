@@ -1578,9 +1578,11 @@
         "speed_steps": 40,
         "val_steps": 32,
         "default": {
-            "animation": "cycle_left_right",
-            "speed": 135,
-            "val": 96
+            "animation": "solid_splash",
+            "hue": 0,
+            "sat": 255,
+            "val": 160,
+            "speed": 255
         }
     },
     "rgblight": {
