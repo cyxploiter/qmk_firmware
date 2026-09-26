@@ -102,14 +102,11 @@ uint8_t         rl_rgb_brightness_val  = 0;
 static uint32_t alt_timer    = 0;
 bool            alt_f4_ready = false;
 
-/* How long Caps Lock must be held before it becomes Fn, in ms. Well clear of a
-   normal keytap (~50-150ms) so ordinary Caps presses are unaffected. */
-#define CAPS_FN_HOLD_MS 500
-
-/* Caps Lock hold-to-Fn state */
-static bool     caps_held      = false;
-static bool     caps_fn_active = false;
-static uint32_t caps_timer     = 0;
+/* Caps Lock hold-to-Fn state. caps_layer is latched at press time so release
+   turns off the same layer even if the Mac/Windows mode changed in between. */
+static bool    caps_held  = false;
+static bool    caps_used  = false;
+static uint8_t caps_layer = 0;
 // ------------------------
 
 static bool     linker_ok    = false;
@@ -779,27 +776,33 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         hs_rgb_blink_set_timer(timer_read32());
     }
 
-    /* Caps Lock doubles as Fn: a tap sends Caps Lock, holding it for 1s turns
-       on the Fn layer for as long as it stays down. Caps Lock is emitted on
-       release so that a hold can suppress it. The 1s timer itself lives in
-       housekeeping_task_user(). Skipped while the RGB recorder is running so
-       key capture there is unaffected. */
-    if (!rgbrec_is_started() && keycode == KC_CAPS) {
-        if (record->event.pressed) {
-            caps_held      = true;
-            caps_fn_active = false;
-            caps_timer     = timer_read32();
-        } else {
-            caps_held  = false;
-            caps_timer = 0;
-            if (caps_fn_active) {
-                layer_off(keymap_is_mac_system() ? _MFL : _FL);
-                caps_fn_active = false;
+    /* Caps Lock doubles as Fn. The Fn layer comes on the moment Caps goes down,
+       so there is no wait before an Fn combo works. Whether it was a tap or a
+       hold is decided on release instead: if nothing else was pressed while it
+       was down, Caps Lock is sent then. Skipped while the RGB recorder is
+       running so key capture there is unaffected. */
+    if (!rgbrec_is_started()) {
+        if (keycode == KC_CAPS) {
+            if (record->event.pressed) {
+                caps_held  = true;
+                caps_used  = false;
+                caps_layer = keymap_is_mac_system() ? _MFL : _FL;
+                layer_on(caps_layer);
             } else {
-                tap_code(KC_CAPS);
+                caps_held = false;
+                layer_off(caps_layer);
+                if (!caps_used) {
+                    tap_code(KC_CAPS);
+                }
             }
+            return false;
         }
-        return false;
+
+        /* Any other key going down while Caps is held means it was used as Fn,
+           so release must not also emit Caps Lock. */
+        if (caps_held && record->event.pressed) {
+            caps_used = true;
+        }
     }
 
     switch (keycode) {
@@ -1623,12 +1626,6 @@ void hs_matrix_loop(void) {
 }
 
 void housekeeping_task_user(void) { // loop
-
-    /* Caps Lock held past 1s engages the Fn layer until it is released. */
-    if (caps_held && !caps_fn_active && timer_elapsed32(caps_timer) >= CAPS_FN_HOLD_MS) {
-        caps_fn_active = true;
-        layer_on(keymap_is_mac_system() ? _MFL : _FL);
-    }
 
     // Check if Alt is physically active in the keyboard's memory
     uint8_t mods = get_mods();
