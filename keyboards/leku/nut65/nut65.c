@@ -102,10 +102,6 @@ uint8_t         rl_rgb_brightness_val  = 0;
 static uint32_t alt_timer    = 0;
 bool            alt_f4_ready = false;
 
-/* Matrix position of Caps Lock, used only for the stuck-layer safety net. */
-#define CAPS_MATRIX_ROW 2
-#define CAPS_MATRIX_COL 0
-
 /* Caps Lock hold-to-Fn state. caps_layer is latched at press time so release
    turns off the same layer even if the Mac/Windows mode changed in between. */
 static bool     caps_held  = false;
@@ -793,9 +789,13 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 caps_layer = keymap_is_mac_system() ? _MFL : _FL;
                 layer_on(caps_layer);
             } else {
-                caps_held = false;
+                /* Only a release that pairs with a press we tracked may emit
+                   Caps Lock. Without this, anything that clears caps_held out
+                   of band turns the release into a stray Caps Lock. */
+                bool was_held = caps_held;
+                caps_held     = false;
                 layer_off(caps_layer);
-                if (!caps_used) {
+                if (was_held && !caps_used) {
                     tap_code(KC_CAPS);
                 }
             }
@@ -1632,15 +1632,6 @@ void hs_matrix_loop(void) {
 }
 
 void housekeeping_task_user(void) { // loop
-
-    /* Safety net: if a Caps release was ever missed -- a wireless mode switch,
-       sleep, or the RGB recorder starting mid-press -- the Fn layer would stay
-       on and ordinary keys would keep firing Fn actions. Clear it once the key
-       reads physically up. */
-    if (caps_held && !matrix_is_on(CAPS_MATRIX_ROW, CAPS_MATRIX_COL)) {
-        caps_held = false;
-        layer_off(caps_layer);
-    }
 
     // Check if Alt is physically active in the keyboard's memory
     uint8_t mods = get_mods();
